@@ -4,15 +4,23 @@ var gulp = require('gulp'),
     coffee = require('gulp-coffee'),
     gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
-    coffeeSrc = './{server,client}/**/*.coffee',
+    clientCoffeeSrc = './client/**/*.coffee',
+    serverCoffeeSrc = './server/**/*.coffee',
     templatesSrc = './client/views/*.html',
     styleSrc = './client/styles/*.css';
 
-gulp.task('coffee', function() {
+gulp.task('server-coffee', function() {
 
-  gulp.src( coffeeSrc )
+  gulp.src( serverCoffeeSrc )
     .pipe( coffee({sourceMap: true}).on('error', gutil.log) )
-    .pipe( gulp.dest('build') );
+    .pipe( gulp.dest('build/server') );
+});
+
+gulp.task('client-coffee', function() {
+
+  gulp.src( clientCoffeeSrc )
+    .pipe( coffee({sourceMap: true}).on('error', gutil.log) )
+    .pipe( gulp.dest('build/client') );
 });
 
 gulp.task('html', function() {
@@ -41,15 +49,22 @@ gulp.task('style', function() {
     .pipe( gulp.dest('build/client/styles') );
 });
 
-gulp.task('build', ['coffee', 'html', 'style', 'img']);
+gulp.task('client-build', ['client-coffee', 'html', 'style', 'img']);
+gulp.task('build', ['client-build', 'server-coffee']);
 
 gulp.task('default', ['build'], function() {
 
-  var watcher = gulp.watch([coffeeSrc, templatesSrc, styleSrc], ['build']);
+  var watcher = gulp.watch([clientCoffeeSrc, templatesSrc, styleSrc], ['client-build']);
 
   watcher.on('change', function(e) {
     gutil.log('File ' + e.path + ' was ' + e.type + ', building again...');
   });
 
-  nodemon({ script: 'build/server/index.js', ext: 'js', watch: ['build/server'] });
+  nodemon({
+    script: 'build/server/index.js',
+    ext: 'coffee',
+    watch: ['server']
+  })
+  .on('change', ['server-coffee']);
 });
+
