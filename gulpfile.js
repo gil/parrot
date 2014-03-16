@@ -5,9 +5,7 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
     clientCoffeeSrc = './client/**/*.coffee',
-    serverCoffeeSrc = './server/**/*.coffee',
-    templatesSrc = './client/views/*.html',
-    styleSrc = './client/styles/*.css';
+    serverCoffeeSrc = './server/**/*.coffee';
 
 gulp.task('server-coffee', function() {
 
@@ -23,39 +21,13 @@ gulp.task('client-coffee', function() {
     .pipe( gulp.dest('build/client') );
 });
 
-gulp.task('html', function() {
-
-  gulp.src( '*.html' )
-    .pipe( gulp.dest('build/client') );
-
-  gulp.src( templatesSrc )
-    .pipe( gulp.dest('build/client/views') );
-
-  // TODO: Remove later, change to other plugin
-  gulp.src( 'bower_components/**/*' )
-    .pipe( gulp.dest('build/client/bower_components') );
-});
-
-gulp.task('img', function() {
-
-  gulp.src( 'client/img/*' )
-    .pipe( gulp.dest('build/client/img') );
-
-});
-
-gulp.task('style', function() {
-
-  gulp.src( styleSrc )
-    .pipe( gulp.dest('build/client/styles') );
-});
-
-gulp.task('client-build', ['client-coffee', 'html', 'style', 'img']);
+gulp.task('client-build', ['client-coffee']);
 gulp.task('server-build', ['server-coffee']);
 gulp.task('build', ['client-build', 'server-build']);
 
 gulp.task('default', ['build'], function() {
 
-  var watcher = gulp.watch([clientCoffeeSrc, templatesSrc, styleSrc], ['client-build']);
+  var watcher = gulp.watch([clientCoffeeSrc], ['client-build']);
 
   watcher.on('change', function(e) {
     gutil.log('File ' + e.path + ' was ' + e.type + ', building again...');

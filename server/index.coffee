@@ -22,6 +22,9 @@ Socket.configureServer(server, sessionStore)
 # Routes
 app.use('/', express.static(__dirname + '/../client'))
 
+if Conf.get("NODE_ENV") == "development"
+  app.use('/', express.static(__dirname + '/../../client'))
+
 app.get "/api/ping", (req, res) ->
   res.json(200, "pong! :]")
 

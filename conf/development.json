@@ -1,4 +1,5 @@
 {
+  "NODE_ENV" : "development",
   "server" : {
     "host" : "http://localhost",
     "sessionSecret" : "i like turtles!"
