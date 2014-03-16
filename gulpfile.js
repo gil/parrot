@@ -50,7 +50,8 @@ gulp.task('style', function() {
 });
 
 gulp.task('client-build', ['client-coffee', 'html', 'style', 'img']);
-gulp.task('build', ['client-build', 'server-coffee']);
+gulp.task('server-build', ['server-coffee']);
+gulp.task('build', ['client-build', 'server-build']);
 
 gulp.task('default', ['build'], function() {
 
@@ -65,6 +66,6 @@ gulp.task('default', ['build'], function() {
     ext: 'coffee',
     watch: ['server']
   })
-  .on('change', ['server-coffee']);
+  .on('change', ['server-build']);
 });
 
