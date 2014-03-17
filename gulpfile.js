@@ -17,6 +17,7 @@ var gulp = require('gulp'),
     LIVE_RELOAD_PORT = 35733;
 
 var paths = {
+  clientIndex : './client/index.html',
   clientCoffeeSrc : './client/**/*.coffee',
   serverCoffeeSrc : './server/**/*.coffee',
   clientTemplatesSrc : './client/templates/**/*.tpl.html',
@@ -58,7 +59,7 @@ gulp.task('compress-images', function() {
 
 gulp.task('compress-code', ['client-coffee', 'templates'], function() {
 
-  return gulp.src( './client/*.html' )
+  return gulp.src( paths.clientIndex )
     .pipe(usemin({
       css: [ minifyCss(), 'concat', rev() ],
       html: [ minifyHtml({ empty: true, conditionals: true, spare: true, quotes: true }) ],
