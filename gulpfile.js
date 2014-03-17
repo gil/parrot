@@ -5,34 +5,48 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
     tinylr = require('tiny-lr'),
-    LIVE_RELOAD_PORT = 35733,
-    clientCoffeeSrc = './client/**/*.coffee',
-    serverCoffeeSrc = './server/**/*.coffee';
+    ngmin = require('gulp-ngmin'),
+    uglify = require('gulp-uglify'),
+    LIVE_RELOAD_PORT = 35733;
+
+var paths = {
+  clientCoffeeSrc : './client/**/*.coffee',
+  serverCoffeeSrc : './server/**/*.coffee',
+  clientBuildScripts : './build/client/**/*.js',
+  clientBuildFiles : './build/client/**/*',
+  serverFile : 'build/server/index.js'
+};
 
 gulp.task('server-coffee', function() {
 
-  return gulp.src( serverCoffeeSrc )
-    .pipe( coffee({sourceMap: true}).on('error', gutil.log) )
+  return gulp.src( paths.serverCoffeeSrc )
+    .pipe( coffee({ sourceMap: true }).on('error', gutil.log) )
     .pipe( gulp.dest('build/server') );
 });
 
 gulp.task('client-coffee', function() {
 
-  return gulp.src( clientCoffeeSrc )
-    .pipe( coffee({sourceMap: true}).on('error', gutil.log) )
+  return gulp.src( paths.clientCoffeeSrc )
+    .pipe( coffee({ sourceMap: true }).on('error', gutil.log) )
     .pipe( gulp.dest('build/client') );
 });
 
-gulp.task('client-build', ['client-coffee']);
-gulp.task('server-build', ['server-coffee']);
-gulp.task('build', ['client-build', 'server-build']);
+gulp.task('compress-js', ['client-coffee'], function() {
 
-gulp.task('default', ['build'], function() {
+  return gulp.src( paths.clientBuildScripts )
+    .pipe( ngmin() )
+    .pipe( uglify({ outSourceMap: true }) )
+    .pipe( gulp.dest('build/client') );
+});
+
+gulp.task('build', ['client-coffee', 'server-coffee', 'compress-js']);
+
+gulp.task('default', ['client-coffee', 'server-coffee'], function() {
 
   var lr = tinylr();
   lr.listen(LIVE_RELOAD_PORT);
 
-  var watcher = gulp.watch(['./client/**/*'], ['client-build']);
+  var watcher = gulp.watch([paths.clientBuildFiles], ['client-coffee']);
 
   watcher.on('change', function(e) {
     gutil.log('File ' + e.path + ' was ' + e.type + ', building again...');
@@ -40,9 +54,9 @@ gulp.task('default', ['build'], function() {
   });
 
   nodemon({
-    script: 'build/server/index.js',
+    script: paths.serverFile,
     ext: 'coffee',
     watch: ['server']
   })
-  .on('change', ['server-build']);
+  .on('change', ['server-coffee']);
 });
