@@ -11,14 +11,14 @@ var gulp = require('gulp'),
 
 gulp.task('server-coffee', function() {
 
-  gulp.src( serverCoffeeSrc )
+  return gulp.src( serverCoffeeSrc )
     .pipe( coffee({sourceMap: true}).on('error', gutil.log) )
     .pipe( gulp.dest('build/server') );
 });
 
 gulp.task('client-coffee', function() {
 
-  gulp.src( clientCoffeeSrc )
+  return gulp.src( clientCoffeeSrc )
     .pipe( coffee({sourceMap: true}).on('error', gutil.log) )
     .pipe( gulp.dest('build/client') );
 });
