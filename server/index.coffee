@@ -1,5 +1,6 @@
 express = require('express')
 http = require('http')
+livereload = require('connect-livereload')
 Conf = require('./conf')
 Socket = require('./socket')
 Auth = require('./auth')
@@ -20,10 +21,11 @@ Auth.configureApp(app)
 Socket.configureServer(server, sessionStore)
 
 # Routes
-app.use('/', express.static(__dirname + '/../client'))
-
 if Conf.get("NODE_ENV") == "development"
+  app.use(livereload({ port: Conf.get("server:liveReloadPort") }))
   app.use('/', express.static(__dirname + '/../../client'))
+
+app.use('/', express.static(__dirname + '/../client'))
 
 app.get "/api/ping", (req, res) ->
   res.json(200, "pong! :]")

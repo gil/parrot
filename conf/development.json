@@ -2,6 +2,7 @@
   "NODE_ENV" : "development",
   "server" : {
     "host" : "http://localhost",
+    "liveReloadPort" : 35733,
     "sessionSecret" : "i like turtles!"
   },
   "debugUser" : {

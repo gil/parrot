@@ -4,6 +4,8 @@ var gulp = require('gulp'),
     coffee = require('gulp-coffee'),
     gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
+    tinylr = require('tiny-lr'),
+    LIVE_RELOAD_PORT = 35733,
     clientCoffeeSrc = './client/**/*.coffee',
     serverCoffeeSrc = './server/**/*.coffee';
 
@@ -27,10 +29,14 @@ gulp.task('build', ['client-build', 'server-build']);
 
 gulp.task('default', ['build'], function() {
 
-  var watcher = gulp.watch([clientCoffeeSrc], ['client-build']);
+  var lr = tinylr();
+  lr.listen(LIVE_RELOAD_PORT);
+
+  var watcher = gulp.watch(['./client/**/*'], ['client-build']);
 
   watcher.on('change', function(e) {
     gutil.log('File ' + e.path + ' was ' + e.type + ', building again...');
+    lr.changed({ body: { files: [require('path').relative(__dirname, e.path)] } });
   });
 
   nodemon({
@@ -40,4 +46,3 @@ gulp.task('default', ['build'], function() {
   })
   .on('change', ['server-build']);
 });
-
