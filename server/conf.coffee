@@ -5,7 +5,7 @@ class Conf
   constructor: () ->
     nconf
       .argv()
-      .env("_")
+      .env()
 
     environment = nconf.get("NODE_ENV") || "development"
     nconf.file(environment, "conf/" + environment + ".json")

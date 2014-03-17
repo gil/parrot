@@ -11,11 +11,16 @@ var gulp = require('gulp'),
     minifyHtml = require('gulp-minify-html'),
     minifyCss = require('gulp-minify-css'),
     rev = require('gulp-rev'),
+    concat = require('gulp-concat'),
+    ngHtml2Js = require('gulp-ng-html2js'),
+    imagemin = require('gulp-imagemin'),
     LIVE_RELOAD_PORT = 35733;
 
 var paths = {
   clientCoffeeSrc : './client/**/*.coffee',
   serverCoffeeSrc : './server/**/*.coffee',
+  clientTemplatesSrc : './client/templates/**/*.tpl.html',
+  clientImages : './client/img/**/*',
   clientBuildScripts : './build/client/**/*.js',
   clientBuildFiles : './build/client/**/*',
   serverFile : 'build/server/index.js'
@@ -35,18 +40,34 @@ gulp.task('client-coffee', function() {
     .pipe( gulp.dest('build/client') );
 });
 
-gulp.task('compress', ['client-coffee'], function() {
+gulp.task('templates', ['client-coffee'], function() {
 
-  gulp.src( './client/*.html' )
-    .pipe(usemin({
-      css: [ minifyCss(), 'concat', rev() ],
-      html: [ minifyHtml({ empty: true, conditionals: true }) ],
-      js: [ ngmin(), uglify({ outSourceMap: true }), rev() ]
-    }))
-    .pipe(gulp.dest('build/client'));
+  return gulp.src( paths.clientTemplatesSrc )
+    .pipe( minifyHtml({ empty: true, conditionals: true, spare: true, quotes: true }) )
+    .pipe( ngHtml2Js({ moduleName: 'appTemplates', prefix: 'templates/' }) )
+    .pipe( concat('templates.js') )
+    .pipe( gulp.dest('build/client') );
 });
 
-gulp.task('build', ['client-coffee', 'server-coffee', 'compress']);
+gulp.task('compress-images', function() {
+
+  return gulp.src( paths.clientImages )
+    .pipe( imagemin() )
+    .pipe( gulp.dest('build/client/img') );
+});
+
+gulp.task('compress-code', ['client-coffee', 'templates'], function() {
+
+  return gulp.src( './client/*.html' )
+    .pipe(usemin({
+      css: [ minifyCss(), 'concat', rev() ],
+      html: [ minifyHtml({ empty: true, conditionals: true, spare: true, quotes: true }) ],
+      js: [ ngmin(), uglify({ outSourceMap: true }), rev() ]
+    }))
+    .pipe( gulp.dest('build/client') );
+});
+
+gulp.task('build', ['server-coffee', 'client-coffee', 'templates', 'compress-images', 'compress-code']);
 
 gulp.task('default', ['client-coffee', 'server-coffee'], function() {
 
