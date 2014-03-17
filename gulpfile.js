@@ -39,9 +39,9 @@ gulp.task('compress', ['client-coffee'], function() {
 
   gulp.src( './client/*.html' )
     .pipe(usemin({
-      css: [minifyCss(), 'concat', rev()],
-      html: [minifyHtml({empty: true})],
-      js: [ngmin(), uglify({ outSourceMap: true }), rev()]
+      css: [ minifyCss(), 'concat', rev() ],
+      html: [ minifyHtml({ empty: true, conditionals: true }) ],
+      js: [ ngmin(), uglify({ outSourceMap: true }), rev() ]
     }))
     .pipe(gulp.dest('build/client'));
 });
