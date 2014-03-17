@@ -5,8 +5,12 @@ var gulp = require('gulp'),
     gutil = require('gulp-util'),
     nodemon = require('gulp-nodemon'),
     tinylr = require('tiny-lr'),
+    usemin = require('gulp-usemin'),
     ngmin = require('gulp-ngmin'),
     uglify = require('gulp-uglify'),
+    minifyHtml = require('gulp-minify-html'),
+    minifyCss = require('gulp-minify-css'),
+    rev = require('gulp-rev'),
     LIVE_RELOAD_PORT = 35733;
 
 var paths = {
@@ -31,15 +35,18 @@ gulp.task('client-coffee', function() {
     .pipe( gulp.dest('build/client') );
 });
 
-gulp.task('compress-js', ['client-coffee'], function() {
+gulp.task('compress', ['client-coffee'], function() {
 
-  return gulp.src( paths.clientBuildScripts )
-    .pipe( ngmin() )
-    .pipe( uglify({ outSourceMap: true }) )
-    .pipe( gulp.dest('build/client') );
+  gulp.src( './client/*.html' )
+    .pipe(usemin({
+      css: [minifyCss(), 'concat', rev()],
+      html: [minifyHtml({empty: true})],
+      js: [ngmin(), uglify({ outSourceMap: true }), rev()]
+    }))
+    .pipe(gulp.dest('build/client'));
 });
 
-gulp.task('build', ['client-coffee', 'server-coffee', 'compress-js']);
+gulp.task('build', ['client-coffee', 'server-coffee', 'compress']);
 
 gulp.task('default', ['client-coffee', 'server-coffee'], function() {
 
