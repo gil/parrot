@@ -43,24 +43,28 @@ class Socket
 
     io.sockets.on 'connection', (socket) ->
 
-      socket.on "join", () ->
+      socket.on "join", (room) ->
         user = socket.handshake.session.passport?.user
+        socket.join(room)
 
         if user
           socket.set("user", user)
-          io.sockets.emit "message", serverMessage( "Hey, <b>#{user.name}</b> have joined the room!" )
+          io.sockets.in(room).emit "message", serverMessage( "Hey, <b>#{user.name}</b> have joined the room!" )
 
+      # socket.on "leave", (room) ->
       socket.on "disconnect", () ->
+        rooms = io.sockets.manager.roomClients[socket.id]
+
         socket.get 'user', (err, user) ->
-          if user
-            io.sockets.emit "message", serverMessage( "User <b>#{user.name}</b> have left the room!" )
+          for room, joined of rooms
+            if user and room.length > 0 and joined
+              io.sockets.in(room.substr(1)).emit "message", serverMessage( "User <b>#{user.name}</b> have left the room!" )
 
       socket.on "message", (msg) ->
         socket.get 'user', (err, user) ->
           if user
             msg.date = new Date()
             msg.from = user
-            io.sockets.emit "message", msg
-            # console.log "MESSAGE -> ", msg
+            io.sockets.in(msg.room).emit "message", msg
 
 module.exports = Socket

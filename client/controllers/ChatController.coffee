@@ -1,10 +1,11 @@
 'use strict';
 
 angular.module('app')
-  .controller 'ChatController', ($scope, $sce, $location, AuthService) ->
+  .controller 'ChatController', ($scope, $sce, $location, $routeParams, AuthService) ->
 
     $scope.messages = []
     $scope.user = {}
+    $scope.room = $routeParams.room;
 
     AuthService.me()
       .success (user) -> $scope.user = user
@@ -15,7 +16,7 @@ angular.module('app')
     }
 
     socket.on 'connect', () ->
-      socket.emit "join"
+      socket.emit "join", $scope.room
 
     socket.on 'message', (msg) ->
       $scope.$apply () ->
@@ -61,6 +62,7 @@ angular.module('app')
 
         socket.emit "message", {
           message : $scope.message
+          room : $scope.room
         }
 
         e.preventDefault()
