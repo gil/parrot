@@ -14,6 +14,7 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     ngHtml2Js = require('gulp-ng-html2js'),
     imagemin = require('gulp-imagemin'),
+    includeSources = require('gulp-include-source'),
     LIVE_RELOAD_PORT = 35733;
 
 var paths = {
@@ -22,6 +23,7 @@ var paths = {
   serverCoffeeSrc : './server/**/*.coffee',
   clientTemplatesSrc : './client/templates/**/*.tpl.html',
   clientImages : './client/img/**/*',
+  clientBuildIndex : './build/client/index.html',
   clientBuildScripts : './build/client/**/*.js',
   clientBuildFiles : './build/client/**/*',
   serverFile : 'build/server/index.js'
@@ -41,6 +43,13 @@ gulp.task('client-coffee', function() {
     .pipe( gulp.dest('build/client') );
 });
 
+gulp.task('html-includes', function() {
+
+  return gulp.src( paths.clientIndex )
+    .pipe( includeSources({ scriptExt : 'js' }) )
+    .pipe( gulp.dest('build/client') );
+});
+
 gulp.task('templates', ['client-coffee'], function() {
 
   return gulp.src( paths.clientTemplatesSrc )
@@ -57,9 +66,9 @@ gulp.task('compress-images', function() {
     .pipe( gulp.dest('build/client/img') );
 });
 
-gulp.task('compress-code', ['client-coffee', 'templates'], function() {
+gulp.task('compress-code', ['client-coffee', 'templates', 'html-includes'], function() {
 
-  return gulp.src( paths.clientIndex )
+  return gulp.src( paths.clientBuildIndex )
     .pipe(usemin({
       css: [ minifyCss(), 'concat', rev() ],
       html: [ minifyHtml({ empty: true, conditionals: true, spare: true, quotes: true }) ],
@@ -68,14 +77,14 @@ gulp.task('compress-code', ['client-coffee', 'templates'], function() {
     .pipe( gulp.dest('build/client') );
 });
 
-gulp.task('build', ['server-coffee', 'client-coffee', 'templates', 'compress-images', 'compress-code']);
+gulp.task('build', ['server-coffee', 'client-coffee', 'templates', 'compress-images', 'html-includes', 'compress-code']);
 
-gulp.task('default', ['client-coffee', 'server-coffee'], function() {
+gulp.task('default', ['html-includes', 'client-coffee', 'server-coffee'], function() {
 
   var lr = tinylr();
   lr.listen(LIVE_RELOAD_PORT);
 
-  var watcher = gulp.watch([paths.clientBuildFiles], ['client-coffee']);
+  var watcher = gulp.watch([paths.clientBuildFiles], ['html-includes', 'client-coffee']);
 
   watcher.on('change', function(e) {
     gutil.log('File ' + e.path + ' was ' + e.type + ', building again...');

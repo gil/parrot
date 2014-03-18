@@ -2,8 +2,8 @@
 <head>
   <title>Parrot</title>
 
-  <!-- build:css style/main.css -->
-  <link rel="stylesheet" href="style/main.css">
+  <!-- build:css(client) style/main.css -->
+  <!-- include:css(style/**/*.css) -->
   <!-- endbuild -->
 
   <link href="img/favicon.ico" rel="shortcut icon" type="image/x-icon" />
@@ -24,11 +24,7 @@
   <!-- build:js({build/client, client}) js/app.js -->
   <script src="templates.js"></script>
   <script src="app.js"></script>
-  <script src="controllers/ChatController.js"></script>
-  <script src="controllers/LoginController.js"></script>
-  <script src="filters/Time.js"></script>
-  <script src="filters/Name.js"></script>
-  <script src="services/AuthService.js"></script>
+  <!-- include:js(*/**/*.coffee) -->
   <!-- endbuild -->
 
 </body>
