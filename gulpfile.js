@@ -25,7 +25,7 @@ var paths = {
   clientImages : './client/img/**/*',
   clientBuildIndex : './build/client/index.html',
   clientBuildScripts : './build/client/**/*.js',
-  clientBuildFiles : './build/client/**/*',
+  clientFiles : './client/**/*',
   serverFile : 'build/server/index.js'
 };
 
@@ -84,7 +84,7 @@ gulp.task('default', ['html-includes', 'client-coffee', 'server-coffee'], functi
   var lr = tinylr();
   lr.listen(LIVE_RELOAD_PORT);
 
-  var watcher = gulp.watch([paths.clientBuildFiles], ['html-includes', 'client-coffee']);
+  var watcher = gulp.watch([paths.clientFiles], ['html-includes', 'client-coffee']);
 
   watcher.on('change', function(e) {
     gutil.log('File ' + e.path + ' was ' + e.type + ', building again...');
