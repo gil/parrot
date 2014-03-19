@@ -9,6 +9,13 @@
   </li>
 </ul>
 
+<div class="online-users">
+  <h2>Users</h2>
+  <ul>
+    <li ng-repeat="user in roomUsers">{{ user.name }}</li>
+  </ul>
+</div>
+
 <div class="message-box">
   <textarea class="message-text" ng-model="message" ng-keydown="messageKeyDown($event)"></textarea>
 </div>

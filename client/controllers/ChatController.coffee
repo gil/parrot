@@ -1,15 +1,19 @@
 'use strict';
 
 angular.module('app')
-  .controller 'ChatController', ($scope, $sce, $location, $routeParams, AuthService) ->
+  .controller 'ChatController', ($scope, $sce, $location, $routeParams, AuthService, RoomService) ->
 
     $scope.messages = []
     $scope.user = {}
     $scope.room = $routeParams.room;
+    $scope.roomUsers = []
 
     AuthService.me()
       .success (user) -> $scope.user = user
       .error (message, code) -> $location.path("/login")
+
+    RoomService.users($scope.room)
+      .success (users) -> $scope.roomUsers = users
 
     socket = io.connect null, {
       transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling', 'jsonp-polling']#, 'flashsocket']
@@ -28,6 +32,16 @@ angular.module('app')
         if !pageFocused
           unreadCount++
           updateUnreadCount()
+
+    socket.on 'join', (user) ->
+      $scope.$apply () ->
+        $scope.roomUsers.push( user )
+        serverMessage("Hey, <b>#{user.name}</b> have joined the room!")
+
+    socket.on 'leave', (user) ->
+      $scope.$apply () ->
+        $scope.roomUsers = _.without( $scope.roomUsers, _.find($scope.roomUsers, { 'id': user.id }) )
+        serverMessage( "User <b>#{user.name}</b> have left the room!" )
 
     addMessage = (msg) ->
       lastMessage = null
@@ -126,3 +140,13 @@ angular.module('app')
     drawLastMessageLine = () ->
       for msg, index in $scope.messages
         msg.lastUnread = ( index == $scope.messages.length - 1 )
+
+    serverMessage = (msg) ->
+      $scope.messages.push {
+        from : {
+          name : "Parrot"
+          photo : "img/parrot_icon.jpg"
+        }
+        message : msg
+        date : new Date()
+      }
