@@ -7,6 +7,18 @@ body {
 }
 
 /*
+  MAIN
+*/
+
+.main {
+  background-color: #F3F3F3;
+  width: 400px;
+  margin: 200px auto;
+  padding: 20px;
+  text-align: center;
+}
+
+/*
   CHAT
 */
 
@@ -18,7 +30,7 @@ body {
   margin: 0;
   padding: 0;
   top: 10px;
-  left: 10px;
+  left: 200px;
   right: 200px;
   bottom: 60px;
 }
@@ -76,6 +88,24 @@ body {
 }
 
 .online-users h2 {
+  margin: 0;
+}
+
+/*
+  ROOMS
+*/
+
+.rooms {
+  position: fixed;
+  overflow: auto;
+  background-color: #FAFAFA;
+  top: 10px;
+  left: 10px;
+  bottom: 60px;
+  width: 180px;
+}
+
+.rooms h2 {
   margin: 0;
 }
 

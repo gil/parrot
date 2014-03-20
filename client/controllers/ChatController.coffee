@@ -1,91 +1,47 @@
 'use strict';
 
 angular.module('app')
-  .controller 'ChatController', ($scope, $sce, $location, $routeParams, AuthService, RoomService) ->
+  .controller 'ChatController', ($scope, $rootScope, $sce, $location, $routeParams, AuthService, ChatService) ->
 
-    $scope.messages = []
     $scope.user = {}
-    $scope.room = $routeParams.room;
-    $scope.roomUsers = []
+    $scope.roomName = $routeParams.room;
+    $scope.room = {}
 
     AuthService.me()
-      .success (user) -> $scope.user = user
-      .error (message, code) -> $location.path("/login")
+      .success (user) ->
 
-    RoomService.users($scope.room)
-      .success (users) -> $scope.roomUsers = users
+        $scope.user = user
+        $scope.room = ChatService.getRoom( $scope.roomName )
+        ChatService.join( $scope.roomName )
 
-    socket = io.connect null, {
-      transports: ['websocket', 'htmlfile', 'xhr-multipart', 'xhr-polling', 'jsonp-polling']#, 'flashsocket']
-    }
+        $rootScope.$watch "pageFocused", (pageFocused) ->
+          drawLastMessageLine() if not pageFocused
 
-    socket.on 'connect', () ->
-      socket.emit "join", $scope.room
+        $rootScope.$on "chatMessage", (e, msg) ->
+          autoScroll() if shouldAutoScroll
 
-    socket.on 'message', (msg) ->
-      $scope.$apply () ->
+        autoScroll()
 
-        autoScrollAfter = shouldAutoScroll()
-        addMessage(msg)
-        autoScroll() if autoScrollAfter
+      .error (message, code) ->
+        $location.path("/login")
 
-        if !pageFocused
-          unreadCount++
-          updateUnreadCount()
-
-    socket.on 'join', (user) ->
-      $scope.$apply () ->
-        $scope.roomUsers.push( user )
-        serverMessage("Hey, <b>#{user.name}</b> have joined the room!")
-
-    socket.on 'leave', (user) ->
-      $scope.$apply () ->
-        $scope.roomUsers = _.without( $scope.roomUsers, _.find($scope.roomUsers, { 'id': user.id }) )
-        serverMessage( "User <b>#{user.name}</b> have left the room!" )
-
-    addMessage = (msg) ->
-      lastMessage = null
-      msg.message = preParseMessage(msg.message)
-
-      if $scope.messages.length > 0
-        lastMessage = $scope.messages[ $scope.messages.length - 1 ]
-
-      if lastMessage and lastMessage.from.name == msg.from.name and lastMessage.from.photo == msg.from.photo and !lastMessage.lastUnread
-        lastMessage.date = msg.date
-        lastMessage.message += "<br/>" + msg.message;
-      else
-        $scope.messages.push msg
-
-    preParseMessage = (msg) ->
-      url_pattern = /([a-z]([a-z]|\d|\+|-|\.)*):(\/\/(((([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?((\[(|(v[\da-f]{1,}\.(([a-z]|\d|-|\.|_|~)|[!\$&'\(\)\*\+,;=]|:)+))\])|((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|(([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=])*)(:\d*)?)(\/(([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*|(\/((([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)|((([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)|((([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)){0})(\?((([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\xE000-\xF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\x00A0-\xD7FF\xF900-\xFDCF\xFDF0-\xFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?/img
-
-      # msg = msg.replace(url_pattern, "$&")
-      msg = msg.replace url_pattern, (url) ->
-        if url.match( /\.(jpg|jpeg|png|gif)$/i )
-          return "<br/><img src='#{url}' /><br/>"
-
-        return "<a href='#{url}' target='_blank'>#{url}</a>"
-
-      msg = msg.replace(/\n/g, "<br/>")
+    $(".messages").on "scroll", (e) ->
+      shouldAutoScroll = checkShouldAutoScroll()
 
     $scope.parseMessage = (msg) ->
       $sce.trustAsHtml(msg)
 
     $scope.messageKeyDown = (e) ->
       if e.keyCode == 13
-
-        socket.emit "message", {
-          message : $scope.message
-          room : $scope.room
-        }
-
+        ChatService.sendMessage( $scope.message, $scope.roomName )
         e.preventDefault()
         $scope.message = ""
 
-    shouldAutoScroll = () ->
+    checkShouldAutoScroll = () ->
       msgContainer = $(".messages");
       return msgContainer.scrollTop() + msgContainer.height() + 10 >= msgContainer[0].scrollHeight
 
+    shouldAutoScroll = true
     autoScrollTimeout = null
 
     autoScroll = () ->
@@ -95,58 +51,6 @@ angular.module('app')
         msgContainer.scrollTop( msgContainer[0].scrollHeight )
       , 200
 
-    pageFocused = true
-    unreadCount = 0
-
-    $(window).on "blur", (e) ->
-      pageFocused = false
-      drawLastMessageLine()
-
-    $(window).on "focus", (e) ->
-      unreadCount = 0
-      pageFocused = true
-      updateUnreadCount()
-      $(".message-text").focus()
-
-    alternateCount = 0
-    alternateInterval = null
-
-    alternateTitle = () ->
-
-      clearInterval( alternateInterval )
-      alternateCount = 0
-
-      alternateInterval = setInterval () ->
-        if alternateCount < 6
-          if document.title.indexOf("Parrot") > -1
-            document.title = "(#{ unreadCount }) <--"
-          else
-            document.title = "(#{ unreadCount }) Parrot"
-
-        alternateCount++
-
-        if alternateCount > 20
-          alternateCount = 0
-      , 1000
-
-    updateUnreadCount = () ->
-      if unreadCount > 0
-        document.title = "(#{ unreadCount }) Parrot";
-        alternateTitle()
-      else
-        clearInterval( alternateInterval )
-        document.title = "Parrot";
-
     drawLastMessageLine = () ->
-      for msg, index in $scope.messages
-        msg.lastUnread = ( index == $scope.messages.length - 1 )
-
-    serverMessage = (msg) ->
-      $scope.messages.push {
-        from : {
-          name : "Parrot"
-          photo : "img/parrot_icon.jpg"
-        }
-        message : msg
-        date : new Date()
-      }
+      for msg, index in $scope.room.messages
+        msg.lastUnread = ( index == $scope.room.messages.length - 1 )

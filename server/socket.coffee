@@ -41,7 +41,10 @@ class Socket
         if user
           user.id = socket.id
           socket.set("user", user)
-          @io.sockets.in(room).emit "join", user
+          @io.sockets.in(room).emit "join", {
+            user : user
+            room : room
+          }
 
       # socket.on "leave", (room) ->
       socket.on "disconnect", () =>
@@ -50,7 +53,11 @@ class Socket
         socket.get 'user', (err, user) =>
           for room, joined of rooms
             if user and room.length > 0 and joined
-              @io.sockets.in(room.substr(1)).emit "leave", user
+              roomName = room.substr(1)
+              @io.sockets.in(roomName).emit "leave", {
+                user : user
+                room : roomName
+              }
 
       socket.on "message", (msg) =>
         socket.get 'user', (err, user) =>
@@ -62,5 +69,9 @@ class Socket
   @usersInRoom: (room) ->
     _.compact @io.sockets.clients( room ).map (client) ->
       client.store.data.user
+
+  @rooms: () ->
+    _.map _.compact( _.keys( @io.sockets.manager.rooms ) ), (room) ->
+      room.substr(1)
 
 module.exports = Socket

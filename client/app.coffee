@@ -6,6 +6,8 @@ angular.module('app', [
   .config ($routeProvider, $httpProvider) ->
 
     $routeProvider
+      .when '/',
+        templateUrl: 'templates/main.tpl.html'
       .when '/chat/:room',
         templateUrl: 'templates/chat.tpl.html'
         controller: 'ChatController'
@@ -13,6 +15,10 @@ angular.module('app', [
         templateUrl: 'templates/login.tpl.html'
         controller: 'LoginController'
       .otherwise
-        redirectTo: '/chat/general'
+        redirectTo: '/'
 
     $httpProvider.defaults.headers.common = { 'Content-Type' : 'application/json' }
+
+  .run (ChatService) ->
+
+    ChatService.listen()

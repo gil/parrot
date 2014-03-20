@@ -30,6 +30,9 @@ app.use('/', express.static(__dirname + '/../../client')) if devMode
 app.get "/api/ping", (req, res) ->
   res.json(200, "pong! :]")
 
+app.get "/api/room", (req, res) ->
+  res.json(200, Socket.rooms())
+
 app.get "/api/room/:room/users", (req, res) ->
   res.json(200, Socket.usersInRoom( req.params.room ))
 

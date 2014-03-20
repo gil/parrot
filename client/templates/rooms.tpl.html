@@ -1,0 +1,6 @@
+<h2>Rooms</h2>
+<ul>
+  <li ng-repeat="room in rooms"><a href="#/chat/{{ room }}">{{ room }}</a></li>
+</ul>
+
+New: <input ng-model="roomName" ng-keyup="createRoom($event)" />
